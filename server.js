@@ -1,4 +1,3 @@
-// Load environment variables FIRST
 require('dotenv').config();
 
 const express = require('express');
@@ -9,14 +8,57 @@ const connectDB = require('./src/config/database');
 
 const app = express();
 
-// Security middleware
-app.use(helmet());
+// Get frontend URL from environment with fallbacks
+const getFrontendUrls = () => {
+  const urls = [
+    process.env.CLIENT_URL,
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://sebastopol-security-academy.vercel.app' // Add your Vercel URL here
+  ].filter(Boolean);
+  
+  // Also allow any Vercel preview URLs
+  if (process.env.CLIENT_URL && process.env.CLIENT_URL.includes('vercel.app')) {
+    urls.push('https://*.vercel.app');
+  }
+  
+  return urls;
+};
+
+const allowedOrigins = getFrontendUrls();
+console.log('🌍 CORS Allowed Origins:', allowedOrigins);
+
+// Enhanced CORS configuration
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.some(allowedOrigin => {
+      if (allowedOrigin.includes('*')) {
+        // Handle wildcard domains like *.vercel.app
+        const domain = allowedOrigin.replace('*.', '');
+        return origin.endsWith(domain);
+      }
+      return origin === allowedOrigin;
+    })) {
+      return callback(null, true);
+    } else {
+      console.log('❌ CORS Blocked:', origin);
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 
-// Rate limiting
+// Handle preflight requests
+app.options('*', cors());
+
+// Rest of your middleware
+app.use(helmet());
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -26,7 +68,6 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -93,6 +134,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Sebastopol Academy Backend running on port ${PORT}`);
   console.log('🏰 Honoring the legacy of Emperor Tewodros II');
   console.log('🌍 Environment:', process.env.NODE_ENV);
+  console.log('🔗 CORS enabled for:', allowedOrigins);
   console.log(`📍 API available at: http://localhost:${PORT}`);
 });
 
