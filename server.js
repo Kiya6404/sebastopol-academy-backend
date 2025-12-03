@@ -7,7 +7,6 @@ const connectDB = require('./src/config/database');
 
 const app = express();
 
-// FINAL ALLOWED ORIGINS (NO LOCALHOST)
 const allowedOrigins = [
   "https://sebastopol-gamma.vercel.app",
   "https://*.vercel.app",
@@ -55,6 +54,15 @@ connectDB();
 app.use("/api/auth", require("./src/routes/auth"));
 app.use("/api/lessons", require("./src/routes/lessons"));
 app.use("/api/news", require("./src/routes/news"));
+
+try {
+  const swaggerDocument = YAML.load('./swagger.yaml');
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  console.log('📚 Swagger UI available at /api-docs');
+} catch (err) {
+  console.warn('⚠️ Swagger file not loaded (./swagger.yaml). /api-docs will be unavailable.');
+}
+
 
 // HEALTH
 app.get("/api/health", (req, res) => {
