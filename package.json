@@ -13,31 +13,32 @@
     "reset": "npm run test-connection && npm run setup",
     "tokens": "node scripts/generateTokens.js"
   },
-  "keywords": ["cybersecurity", "education", "ethiopia", "security-training"],
+  "keywords": [
+    "cybersecurity",
+    "education",
+    "ethiopia",
+    "security-training"
+  ],
   "author": "Sebastopol Security Academy",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "axios": "^1.5.0",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
-    "pg": "^8.11.3",
-    "mongoose": "^7.5.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "axios": "^1.5.0",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.10.0",
     "helmet": "^7.0.0",
-    "express-rate-limit": "^6.10.0"
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.5.0",
+    "pg": "^8.11.3",
+    "swagger-ui-express": "^4.6.3",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
   }
-  {
-  "dependencies": {
-    "swagger-ui-express": "^4.6.3",
-    "yamljs": "^0.3.0"
-  }
-}
 }
