@@ -5,7 +5,13 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./src/config/database');
 
+const path = require('path');
+const fs = require('fs');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+
 const app = express();
+
 
 const allowedOrigins = [
   "https://sebastopol-gamma.vercel.app",
@@ -43,7 +49,6 @@ app.options("*", cors());
 
 // SECURITY
 app.use(helmet());
-
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -55,14 +60,19 @@ app.use("/api/auth", require("./src/routes/auth"));
 app.use("/api/lessons", require("./src/routes/lessons"));
 app.use("/api/news", require("./src/routes/news"));
 
-try {
-  const swaggerDocument = YAML.load('./swagger.yaml');
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-  console.log('📚 Swagger UI available at /api-docs');
-} catch (err) {
-  console.warn('⚠️ Swagger file not loaded (./swagger.yaml). /api-docs will be unavailable.');
+// SWAGGER: robustly load swagger.yaml and serve at /api-docs
+const swaggerPath = path.join(__dirname, 'swagger.yaml');
+if (fs.existsSync(swaggerPath)) {
+  try {
+    const swaggerDocument = YAML.parse(fs.readFileSync(swaggerPath, 'utf8'));
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    console.log('📚 Swagger UI available at /api-docs');
+  } catch (err) {
+    console.error('⚠️ Failed to parse swagger.yaml:', err.message);
+  }
+} else {
+  console.warn(`⚠️ Swagger file not found at ${swaggerPath}. /api-docs will be unavailable.`);
 }
-
 
 // HEALTH
 app.get("/api/health", (req, res) => {
